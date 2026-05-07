@@ -64,4 +64,4 @@ if __name__ == "__main__":
     else:
         host = os.getenv("MCPSERVER_HOST", "127.0.0.1")
         port = int(os.getenv("MCPSERVER_PORT", "8080"))
-        mcp_composite_server.run(transport="http", host=host, port=port)
+        mcp_composite_server.run(transport="http", host=host, port=port, stateless_http=True)
