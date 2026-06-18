@@ -10,10 +10,23 @@ import os
 from datetime import datetime, timezone
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
+from starlette.middleware.base import BaseHTTPMiddleware
 
+MCP_AUTH_TOKEN = os.getenv("MCP_AUTH_TOKEN")
 
+class BearerAuthMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if request.url.path in ("/health", "/metrics"):
+            return await call_next(request)
+        auth = request.headers.get("authorization", "")
+        if not auth.startswith("Bearer "):
+            return JSONResponse({"error": "Unauthorized"}, status_code=401)
+        if auth[7:].strip() != MCP_AUTH_TOKEN:
+            return JSONResponse({"error": "Forbidden"}, status_code=403)
+        return await call_next(request)
 mcp_composite_server = FastMCP(name="CharmHealth API Assistant")
 
+mcp_composite_server.add_middleware(BearerAuthMiddleware)
 mcp_composite_server.add_middleware(ErrorHandlingMiddleware())
 
 mcp_composite_server.add_middleware(SlidingWindowRateLimitingMiddleware(
