@@ -13,8 +13,6 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.types import ASGIApp, Scope, Receive, Send
 
-MCP_AUTH_TOKEN = os.getenv("MCP_AUTH_TOKEN")
-
 class BearerAuthMiddleware:
     def __init__(self, app: ASGIApp):
         self.app = app
@@ -23,12 +21,13 @@ class BearerAuthMiddleware:
         if scope["type"] == "http":
             path = scope.get("path", "")
             if path not in ("/health", "/metrics"):
+                expected_token = os.getenv("MCP_AUTH_TOKEN")
                 headers = dict(scope.get("headers", []))
                 auth = headers.get(b"authorization", b"").decode()
                 if not auth.startswith("Bearer "):
                     await self._reject(send, 401, "Unauthorized")
                     return
-                if auth[7:].strip() != MCP_AUTH_TOKEN:
+                if not expected_token or auth[7:].strip() != expected_token:
                     await self._reject(send, 403, "Forbidden")
                     return
         await self.app(scope, receive, send)
