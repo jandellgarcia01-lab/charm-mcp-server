@@ -44,8 +44,17 @@ from .task_management import (
 
 from .communication import (
     communication_mcp,
-    manageMessages,
-    manageFax
+    manageMessages
+)
+
+from .intake_forms import (
+    intake_forms_mcp,
+    manageIntakeForms
+)
+
+from .billing import (
+    billing_mcp,
+    managePatientBilling
 )
 
 __all__ = [
@@ -73,5 +82,8 @@ __all__ = [
     "manageTasks",
     "communication_mcp",
     "manageMessages",
-    "manageFax"
+    "intake_forms_mcp",
+    "manageIntakeForms",
+    "billing_mcp",
+    "managePatientBilling"
 ]

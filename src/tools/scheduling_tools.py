@@ -62,7 +62,9 @@ async def manageAppointments(
     provider_filter: Optional[str] = None,  # provider_id or provider_name (substring match)
     mode_filter: Optional[str] = None,
     limit: Optional[int] = None,
-    
+
+    response_format: Optional[Literal["concise", "detailed"]] = None,  # reserved for cortex; no behavior change yet (J13/CH-695)
+
     ctx: Context = None,
 ) -> Dict[str, Any]:
     """
@@ -242,7 +244,11 @@ async def manageAppointments(
                         reschedule_data["message_to_patient"] = message_to_patient
                     if resource_id:
                         reschedule_data["resource_id"] = resource_id
-                    
+                    if questionnaire:
+                        reschedule_data["questionnaire"] = questionnaire
+                    if consent_forms:
+                        reschedule_data["consent_forms"] = consent_forms
+
                     response = await client.post(f"/appointment/{appointment_id}/reschedule", data=reschedule_data)
                     
                     if response.get("output_string"):
@@ -310,6 +316,14 @@ async def manageAppointments(
                         provider_id_val = (a or {}).get("member_id") or (a or {}).get("provider_id")
                         provider_name_val = (a or {}).get("member_name") or (a or {}).get("physician_name")
                         provider_search = f"{provider_id_val or ''} {provider_name_val or ''}".strip()
+                        # Canonical display-name field (additive, J13/CH-695):
+                        # previously provider_name_val was only computed for
+                        # this internal search string, then discarded — the
+                        # returned appointment item itself never carried it.
+                        # Attach it to the raw item (a is what "_orig" below
+                        # points at and actually gets returned).
+                        if isinstance(a, dict) and provider_name_val:
+                            a.setdefault("provider_name", provider_name_val)
                         wrappers.append({
                             **(a or {}),
                             "_orig": a,
