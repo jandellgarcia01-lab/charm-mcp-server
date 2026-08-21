@@ -92,8 +92,8 @@ class CharmHealthAPIClient:
         token = await self._get_valid_token()
         return {
             "api_key": self.api_key,
-            "Authorization": f"Bearer {token}",
-            # "Authorization": f"Zoho-oauthtoken {token}",
+            # "Authorization": f"Bearer {token}",
+            "Authorization": f"Zoho-oauthtoken {token}",
             "Content-Type": "application/json",
             "Cache-Control": "no-cache"
         }
